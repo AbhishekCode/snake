@@ -1,10 +1,9 @@
 import React, { Component } from 'react';
 import { StyleSheet, css } from 'aphrodite';
-import { windowHeight, windowWidth } from '../config/config';
+import { windowHeight, windowWidth, boundary, cellSize } from '../config/config';
 import { DIRECTION } from './Snake';
+import Game, { GAMESTATE } from './Game';
 
-
-const cellSize = 10
 
 const styles = StyleSheet.create({
     cell: {
@@ -17,8 +16,8 @@ const styles = StyleSheet.create({
 
 class SnakeCell extends Component {
     pos = {
-        top: windowHeight() / 2,
-        left: 0
+        top: 0,
+        left: windowWidth() / 2
     }
     movingDirection = undefined;
     trail = []
@@ -31,19 +30,26 @@ class SnakeCell extends Component {
         update: false
     }
 
+    _frameId = undefined;
+
     componentDidMount() {
         const { movingDirection } = this.props;
         this.movingDirection = movingDirection;
         for (let i = 0; i < this.length; i++) {
             this.trail.push({ ...this.pos, left: this.pos.left });
         }
-
-
-        this.startLoop();
     }
 
     componentWillReceiveProps(nextProps) {
         this.movingDirection = nextProps.movingDirection;
+        if (this.props.gameState != nextProps.gameState && nextProps.gameState === GAMESTATE.IN_PROGRESS) {
+            this.startLoop()
+        }
+
+        if (this.props.gameState != nextProps.gameState && nextProps.gameState != GAMESTATE.IN_PROGRESS) {
+            this.stopLoop()
+        }
+
     }
 
     startLoop = () => {
@@ -58,21 +64,32 @@ class SnakeCell extends Component {
         const movingDirection = this.movingDirection
         if (movingDirection === DIRECTION.RIGHT) {
             this.pos.left += speed;
-            if (this.pos.left > windowWidth()) this.pos.left = 0;
+            if (this.pos.left > boundary.right) this.pos.left = boundary.left;
         } else if (movingDirection === DIRECTION.LEFT) {
             this.pos.left -= speed;
-            if (this.pos.left < 0) this.pos.left = windowWidth();
+            if (this.pos.left < boundary.left) this.pos.left = boundary.right;
         } else if (movingDirection === DIRECTION.UP) {
             this.pos.top -= speed;
-            if (this.pos.top < 0) this.pos.top = windowHeight();
+            if (this.pos.top <= boundary.top) this.pos.top = boundary.bottom;
         } else if (movingDirection === DIRECTION.DOWN) {
             this.pos.top += speed;
-            if (this.pos.top > windowHeight()) this.pos.top = 0;
+            if (this.pos.top >= boundary.bottom) this.pos.top = boundary.top;
         }
+
+        this._eatFood()
+
         this.setState({ update: !this.state.update })
         // Set up next iteration of the loop
         this.frameId = window.requestAnimationFrame(this.loop)
 
+    }
+
+    _eatFood = () => {
+        if (Math.abs(this.pos.top - this.props.foodPos.top) < cellSize && Math.abs(this.pos.left - this.props.foodPos.left) < cellSize) {
+            //collision
+            this.length += 1;
+            this.props.eatFood();
+        }
     }
 
     stopLoop = () => {
@@ -98,7 +115,9 @@ class SnakeCell extends Component {
         )
 
         this._pushNewTrail(_cellStyle)
-        this.trail.shift();
+        if (this.length < this.trail.length) {
+            this.trail.shift();
+        }
 
         return (
             <div>
@@ -114,7 +133,7 @@ class SnakeCell extends Component {
 export default SnakeCell
 
 SnakeCell.defaultProps = {
-    speed: 1
+    speed: 2
 }
 
 

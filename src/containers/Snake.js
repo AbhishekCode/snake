@@ -25,7 +25,7 @@ class Snake extends Component {
         top: windowHeight() / 2,
         left: windowWidth() / 2
     }
-    movingDirection = DIRECTION.RIGHT
+    movingDirection = DIRECTION.DOWN
     noOfCell = 3;
 
     state = {
@@ -70,10 +70,14 @@ class Snake extends Component {
     }
 
     render() {
+        const { gameState, foodPos, eatFood } = this.props
         return (
             <div>
                 <SnakeCell
                     index={0}
+                    foodPos={foodPos}
+                    eatFood={eatFood}
+                    gameState={gameState}
                     movingDirection={this.movingDirection}
                     changeHeadPos={this._changeHeadPos} />
             </div>
@@ -83,10 +87,5 @@ class Snake extends Component {
 
 
 export default Snake
-
-Snake.defaultProps = {
-    speed: 1
-}
-
 
 
