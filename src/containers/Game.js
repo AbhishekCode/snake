@@ -8,6 +8,7 @@ const styles = StyleSheet.create({
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'flex-start',
+        backgroundColor: '#d9dbdd'
     }
 });
 
@@ -39,8 +40,6 @@ class Game extends Component {
     render() {
         return (
             <div className={css(styles.container)} >
-                snake game
-
                 <Snake />
             </div>
         );
